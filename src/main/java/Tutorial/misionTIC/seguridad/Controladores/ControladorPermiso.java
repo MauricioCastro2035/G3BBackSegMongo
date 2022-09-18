@@ -5,8 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/permiso")
@@ -20,8 +19,6 @@ public class ControladorPermiso {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Permiso create(@RequestBody Permiso infoPermiso){
-        infoPermiso.setUrl(convertirSHA256(infoPermiso.getUrl()));
-        infoPermiso.setMetodo(convertirSHA256(infoPermiso.getMetodo()));
         return this.miRepositorioPermiso.save(infoPermiso);
     }
     @PutMapping("{id}")
@@ -47,20 +44,5 @@ public class ControladorPermiso {
             this.miRepositorioPermiso.delete(usuarioActual);
         }
     }
-    public String convertirSHA256(String password) {
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
-        }
-        byte[] hash = md.digest(password.getBytes());
-        StringBuffer sb = new StringBuffer();
-        for(byte b : hash) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
+
 }
