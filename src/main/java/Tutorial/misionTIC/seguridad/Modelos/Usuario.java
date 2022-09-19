@@ -2,6 +2,7 @@ package Tutorial.misionTIC.seguridad.Modelos;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 @Data
 @Document()
 public class Usuario {
@@ -10,6 +11,17 @@ public class Usuario {
     private String seudonimo;
     private String correo;
     private String contrasena;
+
+    @DBRef
+    private Rol rol;
+
+    public Rol getRol() {
+        return rol;
+    }
+
+    public void setRol(Rol rol) {
+        this.rol = rol;
+    }
 
     public Usuario(String seudonimo, String correo, String contrasena) {
         this.seudonimo = seudonimo;

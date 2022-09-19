@@ -1,5 +1,7 @@
 package Tutorial.misionTIC.seguridad.Controladores;
 import Tutorial.misionTIC.seguridad.Modelos.Usuario;
+import Tutorial.misionTIC.seguridad.Modelos.Rol;
+import Tutorial.misionTIC.seguridad.Repositorios.RepositorioRol;
 import Tutorial.misionTIC.seguridad.Repositorios.RepositorioUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,8 +13,13 @@ import java.security.NoSuchAlgorithmException;
 @RestController
 @RequestMapping("/usuarios")
 public class ControladorUsuario {
+
+
     @Autowired
     private RepositorioUsuario miRepositorioUsuario;
+    @Autowired
+    private RepositorioRol miRepositorioRol;
+
     @GetMapping("")
     public List<Usuario> index(){
         return this.miRepositorioUsuario.findAll();
@@ -47,6 +54,17 @@ public class ControladorUsuario {
             this.miRepositorioUsuario.delete(usuarioActual);
         }
     }
+
+    /*Relacion 1 a n entre rol y usuario*/
+
+    @PutMapping("{id}/rol/{id_rol}")
+    public Usuario asignarRolAUsuario(@PathVariable String id,@PathVariable String id_rol){
+        Usuario usuarioActual=this.miRepositorioUsuario.findById(id).orElseThrow(RuntimeException::new);
+        Rol rolActual=this.miRepositorioRol.findById(id_rol).orElseThrow(RuntimeException::new);
+        usuarioActual.setRol(rolActual);
+        return this.miRepositorioUsuario.save(usuarioActual);
+    }
+
     public String convertirSHA256(String password) {
         MessageDigest md = null;
         try {
