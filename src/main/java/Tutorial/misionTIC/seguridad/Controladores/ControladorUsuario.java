@@ -25,6 +25,7 @@ public class ControladorUsuario {
         return this.miRepositorioUsuario.findAll();
     }
 
+
     @GetMapping("{id}")
     public Usuario index2(@PathVariable String id){
         Usuario usuarioActual=this.miRepositorioUsuario
