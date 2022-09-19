@@ -1,5 +1,6 @@
 package Tutorial.misionTIC.seguridad.Controladores;
 import Tutorial.misionTIC.seguridad.Modelos.Rol;
+import Tutorial.misionTIC.seguridad.Modelos.Usuario;
 import Tutorial.misionTIC.seguridad.Repositorios.RepositorioRol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,14 @@ public class ControladorRol {
     @GetMapping("")
     public List<Rol> index(){
         return this.miRepositorioRol.findAll();
+    }
+
+    @GetMapping("{id}")
+    public Rol index2(@PathVariable String id){
+        Rol rolActual=this.miRepositorioRol
+                .findById(id)
+                .orElse(null);
+        return rolActual;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
