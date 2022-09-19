@@ -24,6 +24,15 @@ public class ControladorUsuario {
     public List<Usuario> index(){
         return this.miRepositorioUsuario.findAll();
     }
+
+    @GetMapping("{id}")
+    public Usuario index2(@PathVariable String id){
+        Usuario usuarioActual=this.miRepositorioUsuario
+                .findById(id)
+                .orElse(null);
+        return usuarioActual;
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Usuario create(@RequestBody Usuario infoUsuario){
