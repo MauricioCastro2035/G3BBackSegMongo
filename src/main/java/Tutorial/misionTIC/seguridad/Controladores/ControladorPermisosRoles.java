@@ -1,4 +1,5 @@
 package Tutorial.misionTIC.seguridad.Controladores;
+import Tutorial.misionTIC.seguridad.Exceptions.AlreadyExistingObjectException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,11 @@ public class ControladorPermisosRoles {
         PermisosRoles nuevo=new PermisosRoles();
         Rol elRol=this.miRepositorioRol.findById(id_rol).get();
         Permiso elPermiso=this.miRepositorioPermiso.findById(id_permiso).get();
+
+        List<PermisosRoles> existentes = this.miRepositorioPermisoRoles.findByRolAndPermiso(elRol, elPermiso);
+        if (existentes.size() > 0){
+            throw new AlreadyExistingObjectException("Ya existe un permiso identico para este rol");
+        }
         if (elRol!=null && elPermiso!=null){
             nuevo.setPermiso(elPermiso);
             nuevo.setRol(elRol);
@@ -58,8 +64,15 @@ public class ControladorPermisosRoles {
                 .findById(id)
                 .orElse(null);
         Rol elRol=this.miRepositorioRol.findById(id_rol).get();
-        Permiso
-                elPermiso=this.miRepositorioPermiso.findById(id_permiso).get();
+        Permiso elPermiso=this.miRepositorioPermiso.findById(id_permiso).get();
+
+        List<PermisosRoles> existentes = this.miRepositorioPermisoRoles.findByRolAndPermiso(elRol, elPermiso);
+        for (PermisosRoles permisoRol:existentes){
+            if (!permisoRol.get_id().equals(id)){
+                throw new AlreadyExistingObjectException("Ya existe un permiso identico para este rol");
+            }
+        }
+
         if(permisosRolesActual!=null && elPermiso!=null && elRol!=null){
             permisosRolesActual.setPermiso(elPermiso);
             permisosRolesActual.setRol(elRol);

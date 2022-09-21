@@ -1,4 +1,5 @@
 package Tutorial.misionTIC.seguridad.Controladores;
+import Tutorial.misionTIC.seguridad.Exceptions.AlreadyExistingObjectException;
 import Tutorial.misionTIC.seguridad.Modelos.Usuario;
 import Tutorial.misionTIC.seguridad.Modelos.Rol;
 import Tutorial.misionTIC.seguridad.Repositorios.RepositorioRol;
@@ -6,6 +7,8 @@ import Tutorial.misionTIC.seguridad.Repositorios.RepositorioUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 import java.util.List;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,28 +31,52 @@ public class ControladorUsuario {
 
     @GetMapping("{id}")
     public Usuario index2(@PathVariable String id){
-        Usuario usuarioActual=this.miRepositorioUsuario
+        return this.miRepositorioUsuario
                 .findById(id)
                 .orElse(null);
-        return usuarioActual;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Usuario create(@RequestBody Usuario infoUsuario){
+    public Usuario create(@RequestBody @Valid Usuario infoUsuario){
+        List<Usuario> seudonimoUser = this.miRepositorioUsuario.findBySeudonimo(infoUsuario.getSeudonimo());
+        if (seudonimoUser.size() > 0){
+            throw new AlreadyExistingObjectException("Ya existe un usuario con este seudonimo");
+        }
+
+        List<Usuario> correoUser = this.miRepositorioUsuario.findByCorreo(infoUsuario.getCorreo());
+        if (correoUser.size() > 0){
+            throw new AlreadyExistingObjectException("Ya existe un usuario con este correo");
+        }
+
         infoUsuario.setContrasena(convertirSHA256(infoUsuario.getContrasena()));
         return this.miRepositorioUsuario.save(infoUsuario);
     }
+
     @PutMapping("{id}")
     public Usuario update(@PathVariable String id,@RequestBody Usuario infoUsuario){
-        Usuario usuarioActual=this.miRepositorioUsuario
+        Usuario usuarioAActualizar=this.miRepositorioUsuario
                 .findById(id)
                 .orElse(null);
-        if (usuarioActual!=null){
-            usuarioActual.setSeudonimo(infoUsuario.getSeudonimo());
-            usuarioActual.setCorreo(infoUsuario.getCorreo());
-            usuarioActual.setContrasena(convertirSHA256(infoUsuario.getContrasena()));
-            return this.miRepositorioUsuario.save(usuarioActual);
+        List<Usuario> seudonimoUser = this.miRepositorioUsuario.findBySeudonimo(infoUsuario.getSeudonimo());
+        for (Usuario usuario:seudonimoUser){
+            if (!usuario.get_id().equals(id)){
+                throw new AlreadyExistingObjectException("Ya existe un usuario con este seudonimo");
+            }
+        }
+
+        List<Usuario> correoUser = this.miRepositorioUsuario.findByCorreo(infoUsuario.getCorreo());
+        for (Usuario usuario:correoUser){
+            if (!usuario.get_id().equals(id)){
+                throw new AlreadyExistingObjectException("Ya existe un usuario con este seudonimo");
+            }
+        }
+
+        if (usuarioAActualizar!=null){
+            usuarioAActualizar.setSeudonimo(infoUsuario.getSeudonimo());
+            usuarioAActualizar.setCorreo(infoUsuario.getCorreo());
+            usuarioAActualizar.setContrasena(convertirSHA256(infoUsuario.getContrasena()));
+            return this.miRepositorioUsuario.save(usuarioAActualizar);
         }else{
             return null;
         }
@@ -57,11 +84,11 @@ public class ControladorUsuario {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id){
-        Usuario usuarioActual=this.miRepositorioUsuario
+        Usuario usuarioAEliminar=this.miRepositorioUsuario
                 .findById(id)
                 .orElse(null);
-        if (usuarioActual!=null){
-            this.miRepositorioUsuario.delete(usuarioActual);
+        if (usuarioAEliminar!=null){
+            this.miRepositorioUsuario.delete(usuarioAEliminar);
         }
     }
 
@@ -69,26 +96,27 @@ public class ControladorUsuario {
 
     @PutMapping("{id}/rol/{id_rol}")
     public Usuario asignarRolAUsuario(@PathVariable String id,@PathVariable String id_rol){
-        Usuario usuarioActual=this.miRepositorioUsuario.findById(id).orElseThrow(RuntimeException::new);
+        Usuario usuarioAAsignarRol=this.miRepositorioUsuario.findById(id).orElseThrow(RuntimeException::new);
         Rol rolActual=this.miRepositorioRol.findById(id_rol).orElseThrow(RuntimeException::new);
-        usuarioActual.setRol(rolActual);
-        return this.miRepositorioUsuario.save(usuarioActual);
+        usuarioAAsignarRol.setRol(rolActual);
+        return this.miRepositorioUsuario.save(usuarioAAsignarRol);
     }
 
     public String convertirSHA256(String password) {
-        MessageDigest md = null;
+
         try {
-            md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuffer sb = new StringBuffer();
+            for(byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
         }
         catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return null;
         }
-        byte[] hash = md.digest(password.getBytes());
-        StringBuffer sb = new StringBuffer();
-        for(byte b : hash) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
+
     }
 }

@@ -2,13 +2,20 @@ package Tutorial.misionTIC.seguridad.Modelos;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import javax.validation.constraints.NotEmpty;
+
 @Data
 @Document()
 public class Permiso {
     @Id
     private String _id;
+    @NotEmpty(message = "La URL no debe ser nula")
     private String url;
+    @NotEmpty(message = "El metodo no debe ser nulo")
     private String metodo;
+
+    public static final String[] allowedMethods = {"POST", "GET", "PUT", "DELETE", "PATCH"};
 
     public Permiso(String url, String metodo) {
         this.url = url;

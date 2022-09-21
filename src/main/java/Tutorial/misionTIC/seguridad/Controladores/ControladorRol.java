@@ -1,10 +1,12 @@
 package Tutorial.misionTIC.seguridad.Controladores;
+import Tutorial.misionTIC.seguridad.Exceptions.AlreadyExistingObjectException;
 import Tutorial.misionTIC.seguridad.Modelos.Rol;
-import Tutorial.misionTIC.seguridad.Modelos.Usuario;
 import Tutorial.misionTIC.seguridad.Repositorios.RepositorioRol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 import java.util.List;
 
 @CrossOrigin
@@ -20,27 +22,37 @@ public class ControladorRol {
 
     @GetMapping("{id}")
     public Rol index2(@PathVariable String id){
-        Rol rolActual=this.miRepositorioRol
+        return this.miRepositorioRol
                 .findById(id)
                 .orElse(null);
-        return rolActual;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Rol create(@RequestBody Rol infoRol){
+    public Rol create(@RequestBody @Valid Rol infoRol){
+        List<Rol> rolNombre = this.miRepositorioRol.findByNombre(infoRol.getNombre());
+        if (rolNombre.size() > 0){
+            throw new AlreadyExistingObjectException("Ya existe un rol con este nombre");
+        }
 
         return this.miRepositorioRol.save(infoRol);
     }
     @PutMapping("{id}")
     public Rol update(@PathVariable String id,@RequestBody Rol infoRol){
-        Rol rolActual=this.miRepositorioRol
+        List<Rol> rolNombre = this.miRepositorioRol.findByNombre(infoRol.getNombre());
+        for (Rol rol:rolNombre){
+            if (!rol.get_id().equals(id)){
+                throw new AlreadyExistingObjectException("Ya existe un rol con este nombre");
+            }
+        }
+
+        Rol rolAActualizar=this.miRepositorioRol
                 .findById(id)
                 .orElse(null);
-        if (rolActual!=null){
-            rolActual.setNombre(infoRol.getNombre());
-            rolActual.setDescripcion(infoRol.getDescripcion());
-            return this.miRepositorioRol.save(rolActual);
+        if (rolAActualizar!=null){
+            rolAActualizar.setNombre(infoRol.getNombre());
+            rolAActualizar.setDescripcion(infoRol.getDescripcion());
+            return this.miRepositorioRol.save(rolAActualizar);
         }else{
             return null;
         }
@@ -48,11 +60,11 @@ public class ControladorRol {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id){
-        Rol rolActual=this.miRepositorioRol
+        Rol rolAEliminar=this.miRepositorioRol
                 .findById(id)
                 .orElse(null);
-        if (rolActual!=null){
-            this.miRepositorioRol.delete(rolActual);
+        if (rolAEliminar!=null){
+            this.miRepositorioRol.delete(rolAEliminar);
         }
     }
 

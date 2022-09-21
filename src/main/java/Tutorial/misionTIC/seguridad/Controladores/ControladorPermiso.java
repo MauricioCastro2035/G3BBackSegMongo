@@ -1,10 +1,14 @@
 package Tutorial.misionTIC.seguridad.Controladores;
+import Tutorial.misionTIC.seguridad.Exceptions.AlreadyExistingObjectException;
+import Tutorial.misionTIC.seguridad.Exceptions.NotValidMethodException;
 import Tutorial.misionTIC.seguridad.Modelos.Permiso;
-import Tutorial.misionTIC.seguridad.Modelos.Rol;
 import Tutorial.misionTIC.seguridad.Repositorios.RepositorioPermiso;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 
 @CrossOrigin
@@ -20,27 +24,52 @@ public class ControladorPermiso {
 
     @GetMapping("{id}")
     public Permiso index2(@PathVariable String id){
-        Permiso permisoActual=this.miRepositorioPermiso
+        return this.miRepositorioPermiso
                 .findById(id)
                 .orElse(null);
-        return permisoActual;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Permiso create(@RequestBody Permiso infoPermiso){
+    public Permiso create(@RequestBody @Valid Permiso infoPermiso){
+        String metodo = infoPermiso.getMetodo();
+        if (Arrays.stream(Permiso.allowedMethods).noneMatch(metodo::equals)) {
+
+            throw new NotValidMethodException("Los metodos permitidos son los siguientes: " + Arrays.toString(Permiso.allowedMethods));
+        }
+
+        List<Permiso> permisoDuplicado = this.miRepositorioPermiso.findByUrlAndMetodo(infoPermiso.getUrl(), infoPermiso.getMetodo());
+        if (permisoDuplicado.size() > 0){
+            throw new AlreadyExistingObjectException("Ya existe un permiso igual a este");
+        }
+
         return this.miRepositorioPermiso.save(infoPermiso);
     }
     @PutMapping("{id}")
     public Permiso update(@PathVariable String id,@RequestBody Permiso infoPermiso){
-        Permiso permisoActual=this.miRepositorioPermiso
+
+        String metodo = infoPermiso.getMetodo();
+        if (Arrays.stream(Permiso.allowedMethods).noneMatch(metodo::equals)) {
+
+            throw new NotValidMethodException("Los metodos permitidos son los siguientes: " + Arrays.toString(Permiso.allowedMethods));
+        }
+
+        List<Permiso> permisoDuplicado = this.miRepositorioPermiso.findByUrlAndMetodo(infoPermiso.getUrl(), infoPermiso.getMetodo());
+        for (Permiso permiso:permisoDuplicado) {
+            if (!permiso.get_id().equals(id)){
+                throw new AlreadyExistingObjectException("Ya existe un permiso igual a este");
+            }
+        }
+
+        Permiso permisoAModificar=this.miRepositorioPermiso
                 .findById(id)
                 .orElse(null);
-        if (permisoActual!=null){
-            permisoActual.setUrl(infoPermiso.getUrl());
-            permisoActual.setMetodo(infoPermiso.getMetodo());
-            return this.miRepositorioPermiso.save(permisoActual);
-        }else{
+        if (permisoAModificar!=null){
+            permisoAModificar.setUrl(infoPermiso.getUrl());
+            permisoAModificar.setMetodo(infoPermiso.getMetodo());
+            return this.miRepositorioPermiso.save(permisoAModificar);
+        }
+        else{
             return null;
         }
     }

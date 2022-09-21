@@ -3,13 +3,21 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
+
 @Data
 @Document()
 public class Usuario {
     @Id
     private String _id;
+    @NotEmpty(message = "El seudonimo no debe ser nulo")
     private String seudonimo;
+    @NotEmpty(message = "El correo no debe ser nulo")
+    @Email(message = "Correo invalido")
     private String correo;
+    @NotEmpty(message = "La contraseña no debe ser nula")
     private String contrasena;
 
     @DBRef
