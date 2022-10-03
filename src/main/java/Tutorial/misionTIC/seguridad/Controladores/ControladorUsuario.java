@@ -7,6 +7,8 @@ import Tutorial.misionTIC.seguridad.Repositorios.RepositorioUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -51,6 +53,19 @@ public class ControladorUsuario {
 
         infoUsuario.setContrasena(convertirSHA256(infoUsuario.getContrasena()));
         return this.miRepositorioUsuario.save(infoUsuario);
+    }
+
+    @PostMapping("/validar")
+    public Usuario validate(@RequestBody Usuario infoUsuario,final HttpServletResponse response) throws IOException {
+        Usuario usuarioActual=this.miRepositorioUsuario.getUserByCorreo(infoUsuario.getCorreo());
+        if (usuarioActual!=null &&
+                usuarioActual.getContrasena().equals(convertirSHA256(infoUsuario.getContrasena()))) {
+            usuarioActual.setContrasena("");
+            return usuarioActual;
+        }else{
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return null;
+        }
     }
 
     @PutMapping("{id}")
@@ -107,7 +122,7 @@ public class ControladorUsuario {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(password.getBytes());
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for(byte b : hash) {
                 sb.append(String.format("%02x", b));
             }
