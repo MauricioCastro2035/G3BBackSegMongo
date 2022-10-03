@@ -88,7 +88,7 @@ public class ControladorUsuario {
         List<Usuario> correoUser = this.miRepositorioUsuario.findByCorreo(infoUsuario.getCorreo());
         for (Usuario usuario:correoUser){
             if (!usuario.get_id().equals(id)){
-                throw new AlreadyExistingObjectException("Ya existe un usuario con este seudonimo");
+                throw new AlreadyExistingObjectException("Ya existe un usuario con este correo");
             }
         }
 
